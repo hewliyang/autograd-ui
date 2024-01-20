@@ -1,6 +1,6 @@
 # autograd-ui
 
-Educative tool for visualizing & understanding automatic differentiation & backpropagation via compute graph & chain rule.
+A simple tool for visualizing & understanding automatic differentiation & backpropagation using compute graphs and the chain rule. [at single-variable, ie: **scalar** level]
 
 ```bash
 pnpm i
@@ -25,13 +25,15 @@ It implements basic **UnaryOps** ($\text{tanh}$, $\text{ReLU}$, and $\text{exp}$
     └── nn.ts
 ```
 
+Also check: [micrograd-ts](https://github.com/trekhleb/micrograd-ts) ❤️
+
 ### Todo
 
 - [x] Directed Edge
 - [x] Figure out how to layout nicely (diff fixed node sizes for `ValueNode` and `OperatorNode`)
 - [x] Recurse on the objective to get `Nodes` and `Edges`.
 
-```json
+```ts
 // shape for ValueNode
 {
 id: "1",
@@ -60,7 +62,7 @@ markerEnd: {
 }
 ```
 
-- [] Figure out a nice way to animate / display the backpropagation process
+- [x] Figure out a nice way to animate / display the backpropagation process
 
 **Idea**:
 Backpropgation happens in reverse topological order, ie: `Loss` -> `leaf`
@@ -225,3 +227,6 @@ Backpropgation happens in reverse topological order, ie: `Loss` -> `leaf`
   },
 ];
 ```
+
+- [] Dynamically update `grad` in each `Value`
+- [] Custom inputs
