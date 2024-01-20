@@ -13,6 +13,9 @@
   import Button from "$lib/components/ui/button/button.svelte";
   import * as Select from "$lib/components/ui/select";
   import * as Collapsible from "$lib/components/ui/collapsible";
+  import * as RadioGroup from "$lib/components/ui/radio-group";
+  import { Label } from "$lib/components/ui/label";
+  import Input from "$lib/components/ui/input/input.svelte";
   import ValueNode from "$lib/components/graph/ValueNode.svelte";
   import { setMode } from "mode-watcher";
   import OperatorNode from "$lib/components/graph/OperatorNode.svelte";
@@ -29,6 +32,7 @@
   } from "$lib/utils";
   import type { BackwardInfo, Value } from "$lib/micrograd/engine";
   import { CaretSort } from "radix-icons-svelte";
+  import type { ExampleType } from "$lib/types";
 
   const nodeTypes = {
     value: ValueNode,
@@ -37,8 +41,21 @@
   let nodes: Writable<Node[]> = writable([]);
   let edges: Writable<Edge[]> = writable([]);
 
-  let examples = { value: multiLayerPerceptron(), label: "Simple" };
-  $: loss = examples.value;
+  // temporarily hard-coded
+  let lossType: ExampleType = "neuron";
+  function switchExample(type: "neuron" | "mlp" | "simple") {
+    switch (type) {
+      case "neuron":
+        return simpleNeuron();
+      case "simple":
+        return simpleArithmetic();
+      case "mlp":
+        return multiLayerPerceptron();
+      default:
+        return simpleNeuron();
+    }
+  }
+  $: loss = switchExample(lossType);
 
   function initGraph(loss: Value) {
     const [initialNodes, initialEdges] = formatTrace(loss);
@@ -81,12 +98,13 @@
 
   $: onStep(step);
 
+  let delay = 250; // in ms
   async function autoBackwards() {
     for (const ins of backward) {
       const _edges = updateEdge(ins, $edges);
       $edges = _edges;
 
-      await sleep(250);
+      await sleep(delay);
     }
   }
 
@@ -156,7 +174,29 @@
               >Cycle</Button
             >
             <Button class="text-xs" on:click={() => reset()}>Reset</Button>
+            <Input
+              type="number"
+              bind:value={delay}
+              min="0"
+              max="1000"
+              step="50"
+            />
           </div>
+          <RadioGroup.Root bind:value={lossType}>
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="simple" id="r1" />
+              <Label for="r1">Simple</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="neuron" id="r2" />
+              <Label for="r2">Neuron</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="mlp" id="r3" />
+              <Label for="r3">MLP</Label>
+            </div>
+            <RadioGroup.Input name="spacing" />
+          </RadioGroup.Root>
           <Select.Root bind:selected={selectedTheme}>
             <Select.Trigger class="w-[180px] text-xs">
               <Select.Value placeholder="Theme" />

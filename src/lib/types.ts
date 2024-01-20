@@ -7,3 +7,5 @@ export type ValueNodeProps = {
 export type OperatorNodeProps = {
   op: string;
 };
+
+export type ExampleType = "neuron" | "mlp" | "simple";
