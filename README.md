@@ -27,6 +27,15 @@ It implements basic **UnaryOps** ($\text{tanh}$, $\text{ReLU}$, and $\text{exp}$
 
 Also check: [micrograd-ts](https://github.com/trekhleb/micrograd-ts) ❤️
 
+**Neuron**
+
+![Neuron architecture reference](https://i.stack.imgur.com/7mTvt.jpg)
+![]
+
+**Multi Layer Perceptron**
+
+![MLP reference](https://cs231n.github.io/assets/nn1/neural_net2.jpeg)
+
 ### Todo
 
 - [x] Directed Edge
@@ -229,4 +238,5 @@ Backpropgation happens in reverse topological order, ie: `Loss` -> `leaf`
 ```
 
 - [] Dynamically update `grad` in each `Value`
-- [] Custom inputs
+- [] Values should be tunable reactively
+- [] Custom inputs (add your own nodes & edges)
