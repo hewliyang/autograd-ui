@@ -46,9 +46,7 @@ export class Value {
     });
 
     out._backward = () => {
-      this.grad += out.grad;
-      other.grad += out.grad;
-      return [
+      const math = [
         {
           src: out.uid,
           dst: this.uid,
@@ -60,6 +58,9 @@ export class Value {
           arithmetic: `${other.grad.toFixed(2)}+${out.grad.toFixed(2)}`,
         },
       ];
+      this.grad += out.grad;
+      other.grad += out.grad;
+      return math;
     };
 
     return out;

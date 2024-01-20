@@ -37,7 +37,7 @@
   let nodes: Writable<Node[]> = writable([]);
   let edges: Writable<Edge[]> = writable([]);
 
-  let examples = { value: simpleNeuron(), label: "Simple" };
+  let examples = { value: multiLayerPerceptron(), label: "Simple" };
   $: loss = examples.value;
 
   function initGraph(loss: Value) {
@@ -54,8 +54,16 @@
   $: initGraph(loss);
 
   // store the backward instructions
+  let hasBackward = false;
+
   function onBackward(loss: Value) {
-    return loss.verboseBackward();
+    const backward = loss.verboseBackward();
+    // update state
+    hasBackward = true;
+    // update nodes
+    const newLoss = loss;
+    initGraph(newLoss);
+    return backward;
   }
 
   let backward: BackwardInfo[];
@@ -63,6 +71,7 @@
 
   let step = -1;
   function onStep(step: number) {
+    if (!hasBackward) return;
     if (step < 0) return;
     const _edges = updateEdge(backward[step], $edges);
 
@@ -129,22 +138,25 @@
             </Button>
           </Collapsible.Trigger>
         </div>
-        <Collapsible.Content class="mt-3 grid grid-cols-2 gap-2 max-w-[250px]">
-          <Button class="text-xs" on:click={() => onLayout("TB")}
-            >Vertical</Button
-          >
-          <Button class="text-xs" on:click={() => onLayout("LR")}
-            >Horizontal</Button
-          >
-          <Button
-            class="text-xs"
-            on:click={() => {
-              step++;
-            }}>Step</Button
-          >
-          <Button class="text-xs" on:click={() => autoBackwards()}>Cycle</Button
-          >
-          <Button class="text-xs" on:click={() => reset()}>Reset</Button>
+        <Collapsible.Content class="mt-3 max-w-[250px] flex flex-col space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <Button class="text-xs" on:click={() => onLayout("TB")}
+              >Vertical</Button
+            >
+            <Button class="text-xs" on:click={() => onLayout("LR")}
+              >Horizontal</Button
+            >
+            <Button
+              class="text-xs"
+              on:click={() => {
+                step++;
+              }}>Step</Button
+            >
+            <Button class="text-xs" on:click={() => autoBackwards()}
+              >Cycle</Button
+            >
+            <Button class="text-xs" on:click={() => reset()}>Reset</Button>
+          </div>
           <Select.Root bind:selected={selectedTheme}>
             <Select.Trigger class="w-[180px] text-xs">
               <Select.Value placeholder="Theme" />
