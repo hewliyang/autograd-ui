@@ -1,4 +1,5 @@
 import { Value } from "./micrograd/engine";
+import { MLP } from "./micrograd/nn";
 
 export const simpleArithmetic = (): Value => {
   // a = 2.0
@@ -53,4 +54,11 @@ export const simpleNeuron = (): Value => {
   o.label = "o";
 
   return o;
+};
+
+export const multiLayerPerceptron = (): Value => {
+  const x = [new Value(2), new Value(3)];
+  const nn = new MLP(2, [2, 2, 1]);
+  const out = nn.forward(x);
+  return out[0];
 };

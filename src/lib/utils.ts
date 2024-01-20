@@ -7,7 +7,7 @@ import type { TransitionConfig } from "svelte/transition";
 // graph imports
 import dagre from "@dagrejs/dagre";
 import { type Node, type Edge, Position, MarkerType } from "@xyflow/svelte";
-import type { Value } from "$lib/micrograd/engine";
+import type { BackwardInfo, Value } from "$lib/micrograd/engine";
 import { v4 as uuidv4 } from "uuid";
 
 // shadcn stuff
@@ -75,7 +75,7 @@ export const flyAndScale = (
 export function getLayoutedElements(
   nodes: Node[],
   edges: Edge[],
-  direction = "LR"
+  direction = "TB"
 ) {
   // init dagre obj
   const g = new dagre.graphlib.Graph();
@@ -113,7 +113,7 @@ export function getLayoutedElements(
     let nodeHeight: number;
 
     if (node.data.op) {
-      nodeWidth = 56;
+      nodeWidth = 102; //56
       nodeHeight = 48;
     } else {
       nodeWidth = 250;
@@ -202,4 +202,84 @@ export function formatTrace(root: Value): [Node[], Edge[]] {
   }
 
   return [nodes, edges];
+}
+
+export function formatBackward(edges: BackwardInfo[]): Edge[] {
+  const formattedEdges = [];
+  for (const e of edges) {
+    formattedEdges.push({
+      id: uuidv4(),
+      source: e.src,
+      target: e.dst,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: "#FF4000",
+      },
+      label: e.arithmetic,
+      style: "stroke: #FF4000",
+    });
+  }
+  return formattedEdges;
+}
+
+export function updateEdge(instruction: BackwardInfo, edges: Edge[]): Edge[] {
+  let edgesCopy = [...edges];
+  let operandEdge: Edge | undefined = undefined;
+
+  // find the edge that connects to the operator node
+  // op(src) -> (tgt)val
+  for (let i = 0; i < edgesCopy.length; i++) {
+    let edge = edgesCopy[i];
+    if (edge.target === instruction.src) {
+      operandEdge = edge;
+
+      // invert the edge
+      const newEdge = {
+        id: edge.id,
+        // swap direction
+        source: edge.source,
+        target: edge.target,
+        markerStart: {
+          type: MarkerType.ArrowClosed,
+          color: "#FF4000",
+        },
+        style: "stroke: #FF4000",
+      };
+
+      // reassign
+      edgesCopy[i] = newEdge;
+    }
+  }
+
+  // find the edge that connects the children to the operator node
+  // [c1(val) -> (tgt)op, c2(val) -> (tgt)op] or if unary op just 1
+  if (!operandEdge) throw new Error("Cannot find the operand");
+
+  for (let i = 0; i < edgesCopy.length; i++) {
+    const edge = edgesCopy[i];
+    if (edge.target === operandEdge.source && edge.source === instruction.dst) {
+      // invert the edge
+      const newEdge = {
+        id: edge.id,
+        // swap direction
+        source: edge.source,
+        target: edge.target,
+        markerStart: {
+          type: MarkerType.ArrowClosed,
+          color: "#FF4000",
+        },
+        label: instruction.arithmetic,
+        style: "stroke: #FF4000",
+      };
+
+      // reassign
+      edgesCopy[i] = newEdge;
+    }
+  }
+
+  return edgesCopy;
+}
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -6,6 +6,13 @@ export type Meta = {
   label?: string;
 };
 
+// store backprop info in queue for lazy visualization
+export type BackwardInfo = {
+  src: string; // src node
+  dst: string; // dst node in reverse (<-)
+  arithmetic: string; // concated string of the operation & operand
+};
+
 export class Value {
   uid: string;
   val: number;
@@ -14,7 +21,7 @@ export class Value {
   // _backward is a void function, but for the sake of
   // visualisation we return the string representation of
   // the arithmetic that is happening internally
-  _backward: () => Record<string, string> | void;
+  _backward: () => Array<BackwardInfo> | void;
   _prev: Set<Value>;
   _op: string;
 
@@ -38,13 +45,21 @@ export class Value {
       _op: "+",
     });
 
-    out._backward = (): Record<string, string> => {
+    out._backward = () => {
       this.grad += out.grad;
       other.grad += out.grad;
-      return {
-        this: `${this.grad}+${out.grad}`,
-        other: `${other.grad}+${out.grad}`,
-      };
+      return [
+        {
+          src: out.uid,
+          dst: this.uid,
+          arithmetic: `${this.grad.toFixed(2)}+${out.grad.toFixed(2)}`,
+        },
+        {
+          src: out.uid,
+          dst: other.uid,
+          arithmetic: `${other.grad.toFixed(2)}+${out.grad.toFixed(2)}`,
+        },
+      ];
     };
 
     return out;
@@ -60,10 +75,18 @@ export class Value {
     out._backward = () => {
       this.grad += other.val * out.grad;
       other.grad += this.val * out.grad;
-      return {
-        this: `${other.val}*${out.grad}`,
-        other: `${this.val}*${out.grad}`,
-      };
+      return [
+        {
+          src: out.uid,
+          dst: this.uid,
+          arithmetic: `${other.val.toFixed(2)}*${out.grad.toFixed(2)}`,
+        },
+        {
+          src: out.uid,
+          dst: other.uid,
+          arithmetic: `${this.val.toFixed(2)}*${out.grad.toFixed(2)}`,
+        },
+      ];
     };
 
     return out;
@@ -77,9 +100,15 @@ export class Value {
 
     out._backward = () => {
       this.grad += _other * this.val ** (_other - 1) * out.grad;
-      return {
-        this: `(${_other}*${this.val})^{${_other - 1}*${out.grad}}`,
-      };
+      return [
+        {
+          src: out.uid,
+          dst: this.uid,
+          arithmetic: `(${_other}*${this.val.toFixed(2)})^{${_other.toFixed(
+            2
+          )}-1*${out.grad.toFixed(2)}}`,
+        },
+      ];
     };
 
     return out;
@@ -91,9 +120,13 @@ export class Value {
 
     out._backward = () => {
       this.grad += Number(out.val > 0) * out.grad;
-      return {
-        this: `${Number(out.val > 0)}*${out.grad}`,
-      };
+      return [
+        {
+          src: out.uid,
+          dst: this.uid,
+          arithmetic: `${Number(out.val > 0)}*${out.grad.toFixed(2)}`,
+        },
+      ];
     };
 
     return out;
@@ -105,9 +138,14 @@ export class Value {
 
     out._backward = () => {
       this.grad += out.val * out.grad;
-      return {
-        this: `${out.val}*${out.grad}`,
-      };
+
+      return [
+        {
+          src: out.uid,
+          dst: this.uid,
+          arithmetic: `${out.val.toFixed(2)}*${out.grad.toFixed(2)}`,
+        },
+      ];
     };
 
     return out;
@@ -120,9 +158,13 @@ export class Value {
 
     out._backward = () => {
       this.grad += (1 - t ** 2) * out.grad;
-      return {
-        this: `(1-${t}^2)*${out.grad}`,
-      };
+      return [
+        {
+          src: out.uid,
+          dst: this.uid,
+          arithmetic: `(1-${t.toFixed(2)}^2)*${out.grad.toFixed(2)}`,
+        },
+      ];
     };
 
     return out;
@@ -153,6 +195,21 @@ export class Value {
     for (const v of topo.reverse()) {
       v._backward();
     }
+  }
+
+  verboseBackward(): Array<BackwardInfo> {
+    const topo = this.topoSort();
+    const q = [];
+
+    this.grad = 1.0;
+    for (const v of topo.reverse()) {
+      const ops = v._backward();
+      if (ops) {
+        q.push(...ops);
+      }
+    }
+
+    return q;
   }
 
   math(): Array<string> {
