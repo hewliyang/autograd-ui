@@ -1,5 +1,9 @@
 # autograd-ui
 
+
+https://github.com/hewliyang/autograd-ui/assets/76434265/47d0327f-63b4-4f46-9346-71efd2c13818
+
+
 A simple tool for visualizing & understanding automatic differentiation & backpropagation using compute graphs and the chain rule. [at single-variable, ie: **scalar** level]
 
 ```bash
