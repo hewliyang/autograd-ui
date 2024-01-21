@@ -237,6 +237,6 @@ Backpropgation happens in reverse topological order, ie: `Loss` -> `leaf`
 ];
 ```
 
-- [] Dynamically update `grad` in each `Value`
-- [] Values should be tunable reactively
-- [] Custom inputs (add your own nodes & edges)
+- [ ] Dynamically update `grad` in each `Value`
+- [ ] Values should be tunable reactively
+- [ ] Custom inputs (add your own nodes & edges)
